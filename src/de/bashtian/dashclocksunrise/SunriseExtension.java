@@ -17,23 +17,23 @@
 package de.bashtian.dashclocksunrise;
 
 import android.content.Context;
+import android.content.Intent;
 import android.location.Criteria;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.TextUtils;
+
+import android.text.format.DateFormat;
 import android.util.Log;
 import com.google.android.apps.dashclock.api.DashClockExtension;
 import com.google.android.apps.dashclock.api.ExtensionData;
-
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
-import android.preference.PreferenceManager;
 import com.luckycatlabs.sunrisesunset.SunriseSunsetCalculator;
 import com.luckycatlabs.sunrisesunset.dto.Location;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -91,8 +91,6 @@ public class SunriseExtension extends DashClockExtension {
 
 
     private void publishUpdate(android.location.Location lastLocation) {
-        Log.d(TAG, "sunrise publishUpdate: ");
-
         Location location = new Location(lastLocation.getLatitude(), lastLocation.getLongitude());
         SunriseSunsetCalculator calculator = new SunriseSunsetCalculator(location, TimeZone.getDefault().getID());
 
@@ -104,10 +102,17 @@ public class SunriseExtension extends DashClockExtension {
 
         Log.d(TAG, "before sunrise: " + beforeSunrise + " before sunset:" + beforeSunset);
 
-        // Publish the extension data update.
-        String officialSunriseForDate = calculator.getOfficialSunriseForDate(Calendar.getInstance());
-        String officialSunsetForDate = calculator.getOfficialSunsetForDate(Calendar.getInstance());
+        String inFormat;
+        if (DateFormat.is24HourFormat(this)) {
+            inFormat = "HH:mm";
+        } else {
+            inFormat = "h:mm a";
+        }
 
+        CharSequence officialSunriseForDate = new SimpleDateFormat(inFormat)
+                .format(officialSunriseCalendarForDate.getTime());
+        CharSequence officialSunsetForDate = new SimpleDateFormat(inFormat)
+                .format(officialSunsetCalendarForDate.getTime());
         String sunrise = getString(R.string.expanded_title_template, officialSunriseForDate, "Sunrise");
         String sunset = getString(R.string.expanded_title_template, officialSunsetForDate, "Sunset");
 
@@ -115,7 +120,7 @@ public class SunriseExtension extends DashClockExtension {
         publishUpdate(new ExtensionData()
                 .visible(true)
                 .icon(R.drawable.ic_sunrise)
-                .status(showSunset ? officialSunsetForDate : officialSunriseForDate)
+                .status(showSunset ? officialSunsetForDate.toString() : officialSunriseForDate.toString())
                 .expandedTitle(showSunset ? sunset : sunrise)
                 .expandedBody(showSunset ? sunrise : sunset)
                 .clickIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com"))));
