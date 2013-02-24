@@ -19,4 +19,26 @@
     <string name="extension_title">Sunrise and Sunset</string>
     <string name="extension_description">Shows the sunrise and sunset times for your location.</string>
     <string name="expanded_title_template" translatable="false">%1$s — %2$s</string>
+    <string name="title_settings">Sunrise Extension Settings</string>
+
+    <!-- Preference -->
+    <string name="pref_sunrise_show_before_hours_title">Display next time</string>
+    <string-array name="pref_sunrise_show_before_hours_display_names">
+        <item>1 hour before</item>
+        <item>2 hours before</item>
+        <item>3 hours before</item>
+        <item>6 hours before</item>
+        <item>9 hours before</item>
+        <item>12 hours before</item>
+        <item>always</item>
+    </string-array>
+    <string-array name="pref_sunrise_show_before_hours_values" translatable="false">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>6</item>
+        <item>9</item>
+        <item>12</item>
+        <item>0</item>
+    </string-array>
 </resources>

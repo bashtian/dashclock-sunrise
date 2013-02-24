@@ -17,13 +17,13 @@
 package de.bashtian.dashclocksunrise;
 
 import android.content.Context;
-import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Criteria;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
 import android.text.format.DateFormat;
@@ -40,11 +40,17 @@ import java.util.TimeZone;
 public class SunriseExtension extends DashClockExtension {
     private static final String TAG = "SunriseExtension";
 
-    public static final String PREF_NAME = "pref_name";
+    public static final String PREF_SHOW_BEFORE_HOURS = "pref_sunrise_show_before_hours";
 
     private static final Criteria sLocationCriteria;
 
     private boolean mOneTimeLocationListenerActive = false;
+
+    private static final long MINUTE_MILLIS = 60 * 1000;
+    private static final long HOUR_MILLIS = 60 * MINUTE_MILLIS;
+
+    private static final int DEFAULT_SHOW_BEFORE_HOURS = 0;
+    private int mShowBeforeHours = DEFAULT_SHOW_BEFORE_HOURS;
 
     private static final long STALE_LOCATION_NANOS = 10l * 60000000000l; // 10 minutes
 
@@ -91,16 +97,34 @@ public class SunriseExtension extends DashClockExtension {
 
 
     private void publishUpdate(android.location.Location lastLocation) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+
+        try {
+            mShowBeforeHours = Integer.parseInt(sp.getString(PREF_SHOW_BEFORE_HOURS,
+                    Integer.toString(mShowBeforeHours)));
+        } catch (NumberFormatException e) {
+            mShowBeforeHours = DEFAULT_SHOW_BEFORE_HOURS;
+        }
+
+
         Location location = new Location(lastLocation.getLatitude(), lastLocation.getLongitude());
         SunriseSunsetCalculator calculator = new SunriseSunsetCalculator(location, TimeZone.getDefault().getID());
 
-        Calendar officialSunriseCalendarForDate = calculator.getOfficialSunriseCalendarForDate(Calendar.getInstance());
-        boolean beforeSunrise = officialSunriseCalendarForDate.before(Calendar.getInstance());
+        Calendar now = Calendar.getInstance();
+        Calendar sunset = calculator.getOfficialSunsetCalendarForDate(now);
 
-        Calendar officialSunsetCalendarForDate = calculator.getOfficialSunsetCalendarForDate(Calendar.getInstance());
-        boolean beforeSunset = officialSunsetCalendarForDate.before(Calendar.getInstance());
+        // when time is after sunset, use the next day
+        if (now.after(sunset)) {
+            now.add(Calendar.DATE, 1);
+            sunset = calculator.getOfficialSunsetCalendarForDate(now);
+        }
 
-        Log.d(TAG, "before sunrise: " + beforeSunrise + " before sunset:" + beforeSunset);
+        Calendar sunrise = calculator.getOfficialSunriseCalendarForDate(now);
+
+        boolean isBeforeSunset = now.before(sunset);
+        boolean isBeforeSunrise = now.before(sunrise);
+
+        Log.d(TAG, "before sunrise: " + isBeforeSunrise + " before sunset:" + isBeforeSunset);
 
         String inFormat;
         if (DateFormat.is24HourFormat(this)) {
@@ -110,20 +134,32 @@ public class SunriseExtension extends DashClockExtension {
         }
 
         CharSequence officialSunriseForDate = new SimpleDateFormat(inFormat)
-                .format(officialSunriseCalendarForDate.getTime());
+                .format(sunrise.getTime());
         CharSequence officialSunsetForDate = new SimpleDateFormat(inFormat)
-                .format(officialSunsetCalendarForDate.getTime());
-        String sunrise = getString(R.string.expanded_title_template, officialSunriseForDate, "Sunrise");
-        String sunset = getString(R.string.expanded_title_template, officialSunsetForDate, "Sunset");
+                .format(sunset.getTime());
+        String sunriseText = getString(R.string.expanded_title_template, officialSunriseForDate, "Sunrise");
+        String sunsetText = getString(R.string.expanded_title_template, officialSunsetForDate, "Sunset");
 
-        boolean showSunset = beforeSunrise && !beforeSunset;
+        boolean showSunset = !isBeforeSunrise && isBeforeSunset;
+        boolean visible = true;
+
+        if (mShowBeforeHours != 0) {
+            long nextChange = showSunset ? sunset.getTimeInMillis() : sunrise.getTimeInMillis();
+            long currentTimestamp = getCurrentTimestamp();
+            visible = nextChange - currentTimestamp < mShowBeforeHours * HOUR_MILLIS;
+        }
+
         publishUpdate(new ExtensionData()
-                .visible(true)
+                .visible(visible)
                 .icon(R.drawable.ic_sunrise)
                 .status(showSunset ? officialSunsetForDate.toString() : officialSunriseForDate.toString())
-                .expandedTitle(showSunset ? sunset : sunrise)
-                .expandedBody(showSunset ? sunrise : sunset)
-                .clickIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com"))));
+                .expandedTitle(showSunset ? sunsetText : sunriseText)
+                .expandedBody(showSunset ? sunriseText : sunsetText));
+                //.clickIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com"))));
+    }
+
+    private static long getCurrentTimestamp() {
+        return Calendar.getInstance().getTimeInMillis();
     }
 
     private LocationListener mOneTimeLocationListener = new LocationListener() {
