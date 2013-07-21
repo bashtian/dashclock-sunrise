@@ -17,10 +17,19 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <ListPreference
-        android:key="pref_sunrise_show_before_hours"
+        android:key="pref_sunrise_show_before_hours_sunrise"
         android:entryValues="@array/pref_sunrise_show_before_hours_values"
         android:entries="@array/pref_sunrise_show_before_hours_display_names"
-        android:title="@string/pref_sunrise_show_before_hours_title"
+        android:title="@string/pref_sunrise_show_before_hours_title_sunrise"
+        android:defaultValue="0"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null" />
+    
+    <ListPreference
+        android:key="pref_sunrise_show_before_hours_sunset"
+        android:entryValues="@array/pref_sunrise_show_before_hours_values"
+        android:entries="@array/pref_sunrise_show_before_hours_display_names"
+        android:title="@string/pref_sunrise_show_before_hours_title_sunset"
         android:defaultValue="0"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null" />

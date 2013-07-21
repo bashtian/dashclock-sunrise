@@ -22,7 +22,9 @@
     <string name="title_settings">Sunrise Extension Settings</string>
 
     <!-- Preference -->
-    <string name="pref_sunrise_show_before_hours_title">Display next time</string>
+    <string name="pref_sunrise_show_before_hours_title_sunrise">Display next time for Sunrise</string>
+    <string name="pref_sunrise_show_before_hours_title_sunset">Display next time for Sunset</string>
+    
     <string-array name="pref_sunrise_show_before_hours_display_names">
         <item>1 hour before</item>
         <item>2 hours before</item>

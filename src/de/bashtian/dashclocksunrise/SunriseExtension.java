@@ -40,7 +40,8 @@ import java.util.TimeZone;
 public class SunriseExtension extends DashClockExtension {
     private static final String TAG = "SunriseExtension";
 
-    public static final String PREF_SHOW_BEFORE_HOURS = "pref_sunrise_show_before_hours";
+    public static final String PREF_SHOW_BEFORE_HOURS_SUNRISE = "pref_sunrise_show_before_hours_sunrise";
+    public static final String PREF_SHOW_BEFORE_HOURS_SUNSET = "pref_sunrise_show_before_hours_sunset";
 
     private static final Criteria sLocationCriteria;
 
@@ -50,7 +51,8 @@ public class SunriseExtension extends DashClockExtension {
     private static final long HOUR_MILLIS = 60 * MINUTE_MILLIS;
 
     private static final int DEFAULT_SHOW_BEFORE_HOURS = 0;
-    private int mShowBeforeHours = DEFAULT_SHOW_BEFORE_HOURS;
+    private int mShowBeforeHoursSunrise = DEFAULT_SHOW_BEFORE_HOURS;
+    private int mShowBeforeHoursSunset = DEFAULT_SHOW_BEFORE_HOURS;
 
     private static final long STALE_LOCATION_NANOS = 10l * 60000000000l; // 10 minutes
 
@@ -100,10 +102,13 @@ public class SunriseExtension extends DashClockExtension {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 
         try {
-            mShowBeforeHours = Integer.parseInt(sp.getString(PREF_SHOW_BEFORE_HOURS,
-                    Integer.toString(mShowBeforeHours)));
+            mShowBeforeHoursSunrise = Integer.parseInt(sp.getString(PREF_SHOW_BEFORE_HOURS_SUNRISE,
+                    Integer.toString(mShowBeforeHoursSunrise)));
+            mShowBeforeHoursSunset = Integer.parseInt(sp.getString(PREF_SHOW_BEFORE_HOURS_SUNSET,
+                    Integer.toString(mShowBeforeHoursSunset)));
         } catch (NumberFormatException e) {
-            mShowBeforeHours = DEFAULT_SHOW_BEFORE_HOURS;
+            mShowBeforeHoursSunrise = DEFAULT_SHOW_BEFORE_HOURS;
+            mShowBeforeHoursSunset = DEFAULT_SHOW_BEFORE_HOURS;
         }
 
 
@@ -143,10 +148,16 @@ public class SunriseExtension extends DashClockExtension {
         boolean showSunset = !isBeforeSunrise && isBeforeSunset;
         boolean visible = true;
 
-        if (mShowBeforeHours != 0) {
-            long nextChange = showSunset ? sunset.getTimeInMillis() : sunrise.getTimeInMillis();
-            long currentTimestamp = getCurrentTimestamp();
-            visible = nextChange - currentTimestamp < mShowBeforeHours * HOUR_MILLIS;
+        if(mShowBeforeHoursSunset != 0 && mShowBeforeHoursSunrise != 0) {
+	        if (showSunset) {
+	            long nextChange = showSunset ? sunset.getTimeInMillis() : sunrise.getTimeInMillis();
+	            long currentTimestamp = getCurrentTimestamp();
+	            visible = nextChange - currentTimestamp < mShowBeforeHoursSunset * HOUR_MILLIS;
+	        } else {
+	            long nextChange = showSunset ? sunset.getTimeInMillis() : sunrise.getTimeInMillis();
+	            long currentTimestamp = getCurrentTimestamp();
+	            visible = nextChange - currentTimestamp < mShowBeforeHoursSunrise * HOUR_MILLIS;
+	        }
         }
 
         publishUpdate(new ExtensionData()
