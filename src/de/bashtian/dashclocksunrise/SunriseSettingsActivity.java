@@ -1,11 +1,7 @@
 package de.bashtian.dashclocksunrise;
 
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.preference.*;
-import android.text.TextUtils;
 import android.view.MenuItem;
 
 public class SunriseSettingsActivity extends PreferenceActivity {
@@ -33,13 +29,15 @@ public class SunriseSettingsActivity extends PreferenceActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void setupSimplePreferencesScreen() {
+    @SuppressWarnings("deprecation")
+	private void setupSimplePreferencesScreen() {
         addPreferencesFromResource(R.xml.pref_sunrise);
 
         // Bind the summaries of EditText/List/Dialog/Ringtone preferences to
         // their values. When their values change, their summaries are updated
         // to reflect the new value, per the Android Design guidelines.
-        bindPreferenceSummaryToValue(findPreference(SunriseExtension.PREF_SHOW_BEFORE_HOURS));
+        bindPreferenceSummaryToValue(findPreference(SunriseExtension.PREF_SHOW_BEFORE_HOURS_SUNRISE));
+        bindPreferenceSummaryToValue(findPreference(SunriseExtension.PREF_SHOW_BEFORE_HOURS_SUNSET));
     }
 
     /**
